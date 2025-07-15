@@ -43,7 +43,14 @@ class PropertyConverter:
         Converts a Notion property to a Markdown string.
         """
         property_type = property_item["type"]
-        return self.type_specific_converters[property_type](property_item)
+        
+        if property_type in self.type_specific_converters:
+            return self.type_specific_converters[property_type](property_item)
+        else:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Unknown property type '{property_type}' encountered. Property data: {property_item}")
+            return f"[{property_type}: Unsupported property type]"
 
     @staticmethod
     def checkbox(property_item: dict) -> str:
