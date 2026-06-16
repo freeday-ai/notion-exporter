@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Awaitable, Callable, Optional
 import asyncio
 import logging
 
+import httpx
 from notion_client import AsyncClient as NotionClient, APIResponseError
 from notion_client import Client
 from notion_client.helpers import async_collect_paginated_api
@@ -27,15 +28,25 @@ class NotionExporter:
         export_child_pages: bool = False,
         extract_page_metadata: bool = False,
         exclude_title_containing: Optional[str] = None,
+        request_hook: Optional[Callable[[httpx.Request], Awaitable[None]]] = None,
     ):
         """
         :param notion_token: Notion API token.
         :param export_child_pages: Whether to export child pages. Default: True.
         :param extract_page_metadata: Whether to extract page metadata. Default: False.
         :param exclude_title_containing: If specified, pages with titles containing this string will be excluded.
+        :param request_hook: Optional async callable awaited before every Notion API request. A single
+            export fans out into many requests (page metadata, blocks, child pages, users); callers that
+            need to throttle against Notion's per-integration rate limit can pass a hook that acquires a
+            rate-limit slot so each individual request is throttled rather than the export as a whole.
 
         """
-        self.notion = NotionClient(auth=notion_token)
+        client = (
+            httpx.AsyncClient(event_hooks={"request": [request_hook]})
+            if request_hook is not None
+            else None
+        )
+        self.notion = NotionClient(auth=notion_token, client=client)
         self.sync_notion = Client(auth=notion_token)
         self.export_child_pages = export_child_pages
         self.extract_page_metadata = extract_page_metadata
