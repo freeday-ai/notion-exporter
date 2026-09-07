@@ -89,8 +89,8 @@ class BlockConverter:
         Converts a callout block to a Markdown.
         """
         text = richtext_convertor(block["callout"]["rich_text"])
-        icon = block["callout"]["icon"]["emoji"] if "emoji" in block["callout"]["icon"] else ""
-        return f"{icon} {text}"
+        icon = (block["callout"].get("icon") or {}).get("emoji", "")
+        return f"{icon} {text}".lstrip()
 
     @staticmethod
     def child_page(block: dict) -> str:
