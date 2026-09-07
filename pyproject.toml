@@ -28,6 +28,13 @@ dependencies = [
     "notion2md",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+]
+
 [project.urls]
 "GitHub" = "https://github.com/bogdankostic/notion-exporter"
 
